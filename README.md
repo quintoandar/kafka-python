@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/quintoandar/python-kafka-idempotence-client.svg?branch=master)](https://travis-ci.org/quintoandar/python-kafka-idempotence-client)
+
 # Idempotence Client for Kafka
 
 Checks messages to avoid reprocessing events.
