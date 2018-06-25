@@ -6,7 +6,7 @@ class IdempotentClient:
     def __init__(self, host, port, groupId, db=0, expire=14 * 24 * 3600):
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
         self.groupId = groupId
-        self.expire = expire # default 2 weeks
+        self.expire = expire  # default 2 weeks
         self.log = logging.getLogger(__name__)
 
     def markConsumedMessage(self, topic, message):
