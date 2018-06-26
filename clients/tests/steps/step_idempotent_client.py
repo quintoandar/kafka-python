@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that
-from idempotence_client import IdempotenceClient
+from clients import IdempotenceClient
 
 
 @given('IdempotenceClient is instanciated')
