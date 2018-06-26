@@ -1,33 +1,39 @@
 from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that
-from idempotence_client.idempotent_client import IdempotentClient
+from idempotence_client import IdempotenceClient
 
 
-@given('IdempotentClient is instanciated')
-def step_impl_given_idempotent_client_instance(context):
-    context.idempotent_client = IdempotentClient.__new__(IdempotentClient)
-    context.idempotent_client.redis = MagicMock()
-    context.idempotent_client.groupId = 'test'
-    context.idempotent_client.expire = 10
-    context.idempotent_client.log = MagicMock()
+@given('IdempotenceClient is instanciated')
+def step_impl_given_IdempotenceClient_instance(context):
+    context.IdempotenceClient = IdempotenceClient.__new__(IdempotenceClient)
+    context.IdempotenceClient.redis = MagicMock()
+    context.IdempotenceClient.groupId = 'test'
+    context.IdempotenceClient.expire = 10
+    context.IdempotenceClient.log = MagicMock()
+    context.IdempotenceClient.key_extractor = lambda message: message
+
+
+@given('A key extractor is defined')
+def step_impl_given_key_extractor_defined(context):
+    context.IdempotenceClient.key_extractor = lambda message: message.value
 
 
 @when('Key exists in redis')
 def step_impl_when_key_exists(context):
-    context.idempotent_client.redis.get = MagicMock(return_value={'key': 1})
+    context.IdempotenceClient.redis.get = MagicMock(return_value={'key': 1})
 
 
 @when('Key doesnt exist in redis')
 def step_impl_when_key_not_exists(context):
-    context.idempotent_client.redis.get = MagicMock(return_value=None)
+    context.IdempotenceClient.redis.get = MagicMock(return_value=None)
 
 
 @when('Redis raises an error')
 def step_impl_when_redis_error(context):
-    context.idempotent_client.redis.get = MagicMock(
+    context.IdempotenceClient.redis.get = MagicMock(
         side_effect=Exception('Somethig is not right!'))
-    context.idempotent_client.redis.set = MagicMock(
+    context.IdempotenceClient.redis.set = MagicMock(
         side_effect=Exception('Somethig is not right!'))
 
 
@@ -38,17 +44,40 @@ def step_impl_when_markConsumedMessage_called(context):
     context.message.value = '{"test": "test"}'
     context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
         context.message.topic, context.message.value)
-    context.idempotent_client.markConsumedMessage(
+    key = context.IdempotenceClient.key_extractor(context.message)
+    context.expected_key = '{}-{}-{}'.format(context.message.topic,
+                                             context.IdempotenceClient.groupId,
+                                             hash(str(key)))
+    context.IdempotenceClient.markConsumedMessage(
+        context.message.topic, context.message)
+
+
+@when('isUnique is called')
+def step_impl_when_isUnique_called(context):
+    context.message = MagicMock()
+    context.message.topic = 'Test'
+    context.message.value = '{"test": "test"}'
+    context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
+        context.message.topic, context.message.value)
+    key = context.IdempotenceClient.key_extractor(context.message)
+    context.expected_key = '{}-{}-{}'.format(context.message.topic,
+                                             context.IdempotenceClient.groupId,
+                                             hash(str(key)))
+    context.IdempotenceClient.isUnique(
         context.message.topic, context.message)
 
 
 @then('The correct key should be saved on redis')
 def step_impl_then_verify_correct_set_params(context):
-    context.idempotent_client.redis.set\
-        .assert_called_with('{}-{}-{}'
-                            .format(context.message.topic, 'test',
-                                    hash(str(context.message))),
-                            1, ex=context.idempotent_client.expire)
+    context.IdempotenceClient.redis.set\
+        .assert_called_with(context.expected_key,
+                            1, ex=context.IdempotenceClient.expire)
+
+
+@then('The correct key should be passed to redis')
+def step_impl_then_verify_correct_get_params(context):
+    context.IdempotenceClient.redis.get\
+        .assert_called_with(context.expected_key)
 
 
 @then('isUnique should return true')
@@ -56,7 +85,7 @@ def step_impl_then_verify_true(context):
     message = MagicMock()
     message.value = {'test': 'test'}
     message.topic = 'test'
-    assert_that(context.idempotent_client.isUnique(
+    assert_that(context.IdempotenceClient.isUnique(
         message.topic, message) is True)
 
 
@@ -65,7 +94,7 @@ def step_impl_then_verify_false(context):
     message = MagicMock()
     message.value = {'test': 'test'}
     message.topic = 'test'
-    assert_that(context.idempotent_client.isUnique(
+    assert_that(context.IdempotenceClient.isUnique(
         message.topic, message) is False)
 
 
@@ -74,5 +103,5 @@ def step_impl_then_verify_no_errors(context):
     message = MagicMock()
     message.value = {'test': 'test'}
     message.topic = 'test'
-    assert_that(context.idempotent_client.markConsumedMessage(
+    assert_that(context.IdempotenceClient.markConsumedMessage(
         message.topic, message) is None)
