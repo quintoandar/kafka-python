@@ -24,3 +24,16 @@ Feature: IdempotenceClient
         Given IdempotenceClient is instanciated
         When Redis raises an error
         Then markConsumedMessage not rase an error
+
+
+    Scenario: markConsumedMessage with extractor
+        Given IdempotenceClient is instanciated
+        And A key extractor is defined
+        When markConsumedMessage is called
+        Then The correct key should be saved on redis
+
+    Scenario: isUnique with extractor
+        Given IdempotenceClient is instanciated
+        And A key extractor is defined
+        When isUnique is called
+        Then The correct key should be passed to redis

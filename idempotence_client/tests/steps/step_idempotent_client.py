@@ -11,7 +11,13 @@ def step_impl_given_IdempotenceClient_instance(context):
     context.IdempotenceClient.groupId = 'test'
     context.IdempotenceClient.expire = 10
     context.IdempotenceClient.log = MagicMock()
-    context.IdempotenceClient.key_extractor = None
+    context.IdempotenceClient.key_extractor = lambda message: message
+
+
+@given('A key extractor is defined')
+def step_impl_given_key_extractor_defined(context):
+    context.IdempotenceClient.key_extractor = lambda message: message.value
+
 
 @when('Key exists in redis')
 def step_impl_when_key_exists(context):
@@ -38,17 +44,40 @@ def step_impl_when_markConsumedMessage_called(context):
     context.message.value = '{"test": "test"}'
     context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
         context.message.topic, context.message.value)
+    key = context.IdempotenceClient.key_extractor(context.message)
+    context.expected_key = '{}-{}-{}'.format(context.message.topic,
+                                             context.IdempotenceClient.groupId,
+                                             hash(str(key)))
     context.IdempotenceClient.markConsumedMessage(
+        context.message.topic, context.message)
+
+
+@when('isUnique is called')
+def step_impl_when_isUnique_called(context):
+    context.message = MagicMock()
+    context.message.topic = 'Test'
+    context.message.value = '{"test": "test"}'
+    context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
+        context.message.topic, context.message.value)
+    key = context.IdempotenceClient.key_extractor(context.message)
+    context.expected_key = '{}-{}-{}'.format(context.message.topic,
+                                             context.IdempotenceClient.groupId,
+                                             hash(str(key)))
+    context.IdempotenceClient.isUnique(
         context.message.topic, context.message)
 
 
 @then('The correct key should be saved on redis')
 def step_impl_then_verify_correct_set_params(context):
     context.IdempotenceClient.redis.set\
-        .assert_called_with('{}-{}-{}'
-                            .format(context.message.topic, 'test',
-                                    hash(str(context.message))),
+        .assert_called_with(context.expected_key,
                             1, ex=context.IdempotenceClient.expire)
+
+
+@then('The correct key should be passed to redis')
+def step_impl_then_verify_correct_get_params(context):
+    context.IdempotenceClient.redis.get\
+        .assert_called_with(context.expected_key)
 
 
 @then('isUnique should return true')
