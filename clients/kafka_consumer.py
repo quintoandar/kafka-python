@@ -8,7 +8,7 @@ from kafka.consumer.group import KafkaConsumer
 class KafkaConsumerClient:
 
     def __init__(self, group_id, bootstrap_servers, topic,
-                 processor, idempotenceClient=None, deserializer=None):
+                 processor, deserializer=None, idempotenceClient=None):
         self.log = logging.getLogger(__name__)
         self.topic = topic
         self.processor = processor
