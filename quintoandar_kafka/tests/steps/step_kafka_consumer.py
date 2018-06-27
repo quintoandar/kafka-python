@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that, equal_to
-from clients import KafkaConsumerClient
+from quintoandar_kafka import KafkaConsumerClient
 
 message = MagicMock()
 message.value = {'test1': 'test2'}
@@ -9,7 +9,7 @@ message.topic = 'test3'
 
 
 @given('A default KafkaConsumerClient is instanciated')
-@patch('clients.kafka_consumer.KafkaConsumer')
+@patch('quintoandar_kafka.kafka_consumer.KafkaConsumer')
 def step_impl_given_default_KafkaConsumer_instance(context, kafkaConsumerMock):
     context.processor = MagicMock()
     context.group_id = 'test1'
@@ -23,7 +23,7 @@ def step_impl_given_default_KafkaConsumer_instance(context, kafkaConsumerMock):
 
 
 @given('KafkaConsumerClient with custom deserializer and idempotenceClinet')
-@patch('clients.kafka_consumer.KafkaConsumer')
+@patch('quintoandar_kafka.kafka_consumer.KafkaConsumer')
 def step_impl_given_custom_KafkaConsumer_instance(context, kafkaConsumerMock):
     context.processor = MagicMock()
     context.group_id = 'test1'

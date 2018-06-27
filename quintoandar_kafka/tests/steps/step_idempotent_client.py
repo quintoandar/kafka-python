@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that
-from clients import IdempotenceClient
+from quintoandar_kafka import IdempotenceClient
 
 
 message = MagicMock()
