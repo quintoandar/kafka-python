@@ -1,7 +1,12 @@
 from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that
-from idempotence_client import IdempotenceClient
+from clients import IdempotenceClient
+
+
+message = MagicMock()
+message.value = {'test1': 'test2'}
+message.topic = 'test3'
 
 
 @given('IdempotenceClient is instanciated')
@@ -39,9 +44,7 @@ def step_impl_when_redis_error(context):
 
 @when('markConsumedMessage is called')
 def step_impl_when_markConsumedMessage_called(context):
-    context.message = MagicMock()
-    context.message.topic = 'Test'
-    context.message.value = '{"test": "test"}'
+    context.message = message
     context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
         context.message.topic, context.message.value)
     key = context.IdempotenceClient.key_extractor(context.message)
@@ -54,9 +57,7 @@ def step_impl_when_markConsumedMessage_called(context):
 
 @when('isUnique is called')
 def step_impl_when_isUnique_called(context):
-    context.message = MagicMock()
-    context.message.topic = 'Test'
-    context.message.value = '{"test": "test"}'
+    context.message = message
     context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
         context.message.topic, context.message.value)
     key = context.IdempotenceClient.key_extractor(context.message)
@@ -82,26 +83,17 @@ def step_impl_then_verify_correct_get_params(context):
 
 @then('isUnique should return true')
 def step_impl_then_verify_true(context):
-    message = MagicMock()
-    message.value = {'test': 'test'}
-    message.topic = 'test'
     assert_that(context.IdempotenceClient.isUnique(
         message.topic, message) is True)
 
 
 @then('isUnique should return false')
 def step_impl_then_verify_false(context):
-    message = MagicMock()
-    message.value = {'test': 'test'}
-    message.topic = 'test'
     assert_that(context.IdempotenceClient.isUnique(
         message.topic, message) is False)
 
 
 @then('markConsumedMessage not rase an error')
 def step_impl_then_verify_no_errors(context):
-    message = MagicMock()
-    message.value = {'test': 'test'}
-    message.topic = 'test'
     assert_that(context.IdempotenceClient.markConsumedMessage(
         message.topic, message) is None)
