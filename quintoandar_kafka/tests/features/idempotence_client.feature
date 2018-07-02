@@ -3,37 +3,37 @@ Feature: IdempotenceClient
     Scenario: Message is not duplicate
         Given IdempotenceClient is instanciated
         When Key exists in redis
-        Then isUnique should return false
+        Then is_unique should return false
 
     Scenario: Message is duplicate
         Given IdempotenceClient is instanciated
         When Key doesnt exist in redis
-        Then isUnique should return true
+        Then is_unique should return true
 
-    Scenario: Corretly create key on markConsumedMessage
+    Scenario: Corretly create key on mark_consumed_message
         Given IdempotenceClient is instanciated
-        When markConsumedMessage is called
+        When mark_consumed_message is called
         Then The correct key should be saved on redis
 
-    Scenario: Redis error on isUnique
+    Scenario: Redis error on is_unique
         Given IdempotenceClient is instanciated
         When Redis raises an error
-        Then isUnique should return true
+        Then is_unique should return true
 
-    Scenario: Redis error on markConsumedMessage
+    Scenario: Redis error on mark_consumed_message
         Given IdempotenceClient is instanciated
         When Redis raises an error
-        Then markConsumedMessage not rase an error
+        Then mark_consumed_message not rase an error
 
 
-    Scenario: markConsumedMessage with extractor
+    Scenario: mark_consumed_message with extractor
         Given IdempotenceClient is instanciated
         And A key extractor is defined
-        When markConsumedMessage is called
+        When mark_consumed_message is called
         Then The correct key should be saved on redis
 
-    Scenario: isUnique with extractor
+    Scenario: is_unique with extractor
         Given IdempotenceClient is instanciated
         And A key extractor is defined
-        When isUnique is called
+        When is_unique is called
         Then The correct key should be passed to redis
