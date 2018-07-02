@@ -10,10 +10,10 @@ message.topic = 'test3'
 
 
 @given('IdempotenceClient is instanciated')
-def step_impl_given_IdempotenceClient_instance(context):
+def step_impl_given_idempotence_client_instance(context):
     context.IdempotenceClient = IdempotenceClient.__new__(IdempotenceClient)
     context.IdempotenceClient.redis = MagicMock()
-    context.IdempotenceClient.groupId = 'test'
+    context.IdempotenceClient.group_id = 'test'
     context.IdempotenceClient.expire = 10
     context.IdempotenceClient.log = MagicMock()
     context.IdempotenceClient.key_extractor = lambda message: message
@@ -42,29 +42,29 @@ def step_impl_when_redis_error(context):
         side_effect=Exception('Somethig is not right!'))
 
 
-@when('markConsumedMessage is called')
-def step_impl_when_markConsumedMessage_called(context):
+@when('mark_consumed_message is called')
+def step_impl_when_mark_consumed_message_called(context):
     context.message = message
     context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
         context.message.topic, context.message.value)
     key = context.IdempotenceClient.key_extractor(context.message)
-    context.expected_key = '{}-{}-{}'.format(context.message.topic,
-                                             context.IdempotenceClient.groupId,
-                                             hash(str(key)))
-    context.IdempotenceClient.markConsumedMessage(
+    context.expected_key = '{}-{}-{}'\
+        .format(context.message.topic, context.IdempotenceClient.group_id,
+                hash(str(key)))
+    context.IdempotenceClient.mark_consumed_message(
         context.message.topic, context.message)
 
 
-@when('isUnique is called')
-def step_impl_when_isUnique_called(context):
+@when('is_unique is called')
+def step_impl_when_is_unique_called(context):
     context.message = message
     context.message.__str__.return_value = 'Topic="{}", Value="{}"'.format(
         context.message.topic, context.message.value)
     key = context.IdempotenceClient.key_extractor(context.message)
-    context.expected_key = '{}-{}-{}'.format(context.message.topic,
-                                             context.IdempotenceClient.groupId,
-                                             hash(str(key)))
-    context.IdempotenceClient.isUnique(
+    context.expected_key = '{}-{}-{}'\
+        .format(context.message.topic, context.IdempotenceClient.group_id,
+                hash(str(key)))
+    context.IdempotenceClient.is_unique(
         context.message.topic, context.message)
 
 
@@ -81,19 +81,19 @@ def step_impl_then_verify_correct_get_params(context):
         .assert_called_with(context.expected_key)
 
 
-@then('isUnique should return true')
+@then('is_unique should return true')
 def step_impl_then_verify_true(context):
-    assert_that(context.IdempotenceClient.isUnique(
+    assert_that(context.IdempotenceClient.is_unique(
         message.topic, message) is True)
 
 
-@then('isUnique should return false')
+@then('is_unique should return false')
 def step_impl_then_verify_false(context):
-    assert_that(context.IdempotenceClient.isUnique(
+    assert_that(context.IdempotenceClient.is_unique(
         message.topic, message) is False)
 
 
-@then('markConsumedMessage not rase an error')
+@then('mark_consumed_message not rase an error')
 def step_impl_then_verify_no_errors(context):
-    assert_that(context.IdempotenceClient.markConsumedMessage(
+    assert_that(context.IdempotenceClient.mark_consumed_message(
         message.topic, message) is None)

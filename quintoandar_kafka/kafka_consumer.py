@@ -8,12 +8,12 @@ from kafka.consumer.group import KafkaConsumer
 class KafkaConsumerClient:
 
     def __init__(self, group_id, bootstrap_servers, topic,
-                 processor, deserializer=None, idempotenceClient=None):
+                 processor, deserializer=None, idempotence_client=None):
         self.log = logging.getLogger(__name__)
         self.topic = topic
         self.processor = processor
-        self.deserializer = deserializer or self.defaultDeserializer
-        self.idempotenceClient = idempotenceClient or\
+        self.deserializer = deserializer or self.default_deserializer
+        self.idempotence_client = idempotence_client or\
             DefaultIdempotenceClient()
         self.consumer = self.connect(group_id, bootstrap_servers)
         self.consumer.subscribe(topic)
@@ -31,14 +31,14 @@ class KafkaConsumerClient:
             if not message.value:
                 continue
 
-            if not self.idempotenceClient.isUnique(self.topic, message):
+            if not self.idempotence_client.is_unique(self.topic, message):
                 continue
 
             self.processor(message)
 
-            self.idempotenceClient.markConsumedMessage(self.topic, message)
+            self.idempotence_client.mark_consumed_message(self.topic, message)
 
-    def defaultDeserializer(self, m):
+    def default_deserializer(self, m):
         try:
             return json.loads(m.decode('utf8'))
         except Exception as ex:
@@ -48,8 +48,8 @@ class KafkaConsumerClient:
 
 class DefaultIdempotenceClient:
 
-    def isUnique(self, topic, message):
+    def is_unique(self, topic, message):
         return True
 
-    def markConsumedMessage(self, topic, message):
+    def mark_consumed_message(self, topic, message):
         pass
