@@ -4,9 +4,9 @@
 
 QuintoAndar's kafka-python lib wrapper with additional fuctionalities.
 
-## KafkaConsumer
+## KafkaIdempotentConsumer
 
-A simple wrapper for kafka-python lib.
+A simple wrapper for kafka-python lib that uses redis to check duplicate events.
 
 ### Configuration
 
@@ -14,28 +14,9 @@ A simple wrapper for kafka-python lib.
 | ----------------- | -------------------------------------------- |
 | group_id          | The consumer group id                        |
 | bootstrap_servers | The bootstrap servers                        |
-| topic             | The topic to consume from                    |
-| processor         | The function that processes the event        |
-| idempotence_client | (optional) A client that checks for repeated events. Must implement the same interface as [RedisIdempotenceClient](/clients/idempotence_client.py) |
-| deserializer      | (optional) The deserializer                  |
+| redis_host        | The topic to consume from                    |
+| redis_port        | The function that processes the event        |
+| idempotent_key    | a function que extracts a unique identifier from the event |
 
-## RedisIdempotenceClient for Kafka
 
-A redis implementation to check messages and avoid reprocessing events.
-
-### Usage
-
-`mark_consumed_message(topic, message)` creates a hash from the message and concatenates it with the topic and the group id. The message is reigstered as consumed with a default ttl of 2 weeks.
-
-`is_unique(message)` verifies if the message has already been processed.
-
-### Configuration
-
-|        Name   |                 Description     |
-| ------------- | ------------------------------- |
-| host          | The redis host                  |
-| port          | The redis port                  |
-| group_id       | The consumer group id           |
-| db            | (optional) The redis db option  |
-| expire        | (optional) The redis ttl        |
-| idempotent_key | (optional) A funtion that extracts a key that uniquely identifies the event |
+See [examples](/quintokafka/examples)
