@@ -1,7 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that, equal_to
-from quintokafka import KafkaIdempotentConsumer, KafkaSimpleConsumer
+from quintokafka import KafkaIdempotentConsumer
 
 message = MagicMock()
 message.value = {'test1': 'test2'}
@@ -9,139 +9,61 @@ message.topic = 'test3'
 
 
 @given('A KafkaIdempotentConsumer is instanciated')
-@patch('quintokafka.consumer.RedisIdempotenceClient')
-@patch('quintokafka.consumer.KafkaConsumer')
-def step_impl_given_idempotent_kafka_consumer(context,
-                                              kafka_consumer_mock,
-                                              idempotence_client_mock):
-    context.processor = MagicMock()
+def step_impl_given_idempotent_kafka_consumer(context):
     context.idempotent_key = MagicMock()
     context.redis_host = 'redis_host'
     context.redis_port = 'redis_port'
     context.group_id = 'test1'
     context.bootstrap_servers = 'test2'
     context.topic = 'test3'
-    context.kafka_consumer_mock = kafka_consumer_mock
-    context.idempotence_client_mock = idempotence_client_mock
-    context.deserializer = MagicMock()
-    context.consumer =\
-        KafkaIdempotentConsumer(context.redis_host,
-                                context.redis_port,
-                                context.processor,
-                                context.idempotent_key,
-                                group_id=context.group_id,
-                                bootstrap_servers=context.bootstrap_servers,
-                                topic=context.topic,
-                                value_deserializer=context.deserializer)
+    context.consumer = KafkaIdempotentConsumer.__new__(KafkaIdempotentConsumer)
+    context.consumer.idempotence_client = MagicMock()
+    context.consumer.config = {'consumer_timeout_ms': 0}
+    context.consumer._iterator = MagicMock()
 
 
-@given('A KafkaSimpleConsumer')
-@patch('quintokafka.consumer.KafkaConsumer')
-def step_impl_given_simple_kafka_consumer(context,
-                                          kafka_consumer_mock):
-    context.processor = MagicMock()
-    context.group_id = 'test1'
-    context.bootstrap_servers = 'test2'
-    context.topic = 'test3'
-    context.kafka_consumer_mock = kafka_consumer_mock
-    context.consumer =\
-        KafkaSimpleConsumer(context.processor,
-                            group_id=context.group_id,
-                            bootstrap_servers=context.bootstrap_servers,
-                            topic=context.topic)
+@when('The consumer receives an unique message')
+def step_impl_when_message(context):
+    context.consumer._iterator.__next__ = MagicMock(return_value=message)
+    context.consumer.idempotence_client.is_unique = MagicMock(
+        return_value=True)
+    for m in context.consumer:
+        print(m)
+        context.msg = m
+        break
 
 
-@given('The consumer receives a message')
-def step_impl_given_message(context):
-    context.consumer.consumer = [message]
+@when('The consumer receives an repeated message')
+def step_impl_when_repeated_message(context):
+    repeated_msg = MagicMock()
+    repeated_msg.topic = 'repeated'
+    repeated_msg.value = 'repeated'
+    context.consumer._iterator.__next__ = MagicMock()
+    context.consumer._iterator.__next__.side_effect = [repeated_msg, message]
+    context.consumer.idempotence_client.is_unique = MagicMock()
+    context.consumer.idempotence_client.is_unique.side_effect = [False, True]
+    for m in context.consumer:
+        context.msg = m
+        break
 
 
-@given('The idempotence_client marks the message as unique')
-def step_impl_given_flaged_unique_message(context):
-    idempotence_client = MagicMock()
-    idempotence_client.is_unique = MagicMock(return_value=True)
-    context.consumer.idempotence_client = idempotence_client
+@then('The message should be returned')
+def step_impl_then_return_msg(context):
+    assert_that(context.msg, equal_to(message))
 
 
-@given('The idempotence_client marks the message as repeated')
-def step_impl_given_flagged_repeated_message(context):
-    idempotence_client = MagicMock()
-    idempotence_client.is_unique = MagicMock(return_value=False)
-    context.consumer.idempotence_client = idempotence_client
+@then('The repeated message should be skipped')
+def step_impl_then_skip_msg(context):
+    assert_that(context.msg, equal_to(message))
 
 
-@given('The consumer receives repeated messages')
-def step_impl_given_repeated_message(context):
-    context.consumer.consumer = [message, message]
-
-
-@when('The message is processed')
-def step_impl_when_msg_processed(context):
-    context.consumer.start()
-
-
-@when('An invalid value is deserialized')
-def step_impl_when_invalid_message(context):
-    dir(context.consumer)
-    context.result = context.consumer\
-        ._KafkaSimpleConsumer__default_deserializer(
-            bytes('not json', 'utf-8'))
-
-
-@when('A valid value is deserialized')
-def step_impl_when_valid_message(context):
-    context.expected = {'test1': 'test2'}
-    context.result = context.consumer\
-        ._KafkaSimpleConsumer__default_deserializer(
-            bytes('{"test1": "test2"}', 'utf-8'))
-
-
-@then('The processor should be called')
-def step_impl_then_processor(context):
-    context.processor.assert_called_once_with(message)
+@then('The idempotence_client should be called with the correct params')
+def step_impl_then_call_is_unique(context):
+    context.consumer.idempotence_client.mark_consumed_message.\
+        assert_called_once_with(message.topic, message)
 
 
 @then('The idempotence_client should mark the message as consumed')
 def step_impl_then_mark_consumed(context):
     context.consumer.idempotence_client.mark_consumed_message.\
         assert_called_once_with(message.topic, message)
-
-
-@then('The processor should not be called')
-def step_impl_then_not_processor(context):
-    context.processor.call_count == 0
-
-
-@then('The processor should be called for every message')
-def step_impl_then_processor_called_all_messages(context):
-    context.processor.call_count == len(
-        context.consumer.consumer)
-
-
-@then('The deserialized value should be an empty object')
-def step_impl_then_empty_object(context):
-    assert_that(context.result, equal_to({}))
-
-
-@then('The deserialized value should be the expected object')
-def step_impl_then_expected_object(context):
-    assert_that(context.result, equal_to(context.expected))
-
-
-@then('The KafkaConsumer should be instanciated with the correct params')
-def step_impl_then_correct_consumer_configs(context):
-    context.kafka_consumer_mock.assert_called_with({
-        'group_id': context.group_id,
-        'bootstrap_servers': context.bootstrap_servers,
-        'topic': context.topic,
-        'auto_offset_reset': 'latest',
-        'value_deserializer': context.deserializer})
-
-
-@then('The idempotence_client created with the correct params')
-def step_impl_then_correct_idempotence_client(context):
-    context.idempotence_client_mock\
-        .assert_called_with(context.redis_host,
-                            context.redis_port,
-                            context.group_id,
-                            idempotent_key=context.idempotent_key)

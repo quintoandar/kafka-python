@@ -7,7 +7,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 # change dir to make sure data is loaded and saved to the correct directory
 os.chdir(dir_path)
 
-MINIMUM_COVERAGE = 75
+MINIMUM_COVERAGE = 70
 START_GREEN = '\x1b[1;36;40m'
 START_RED = '\x1b[6;30;41m'
 END_COLOR = '\x1b[0m'

@@ -12,7 +12,6 @@ setup(name='quintoandar_kafka',
       packages=find_packages(exclude=['ez_setup', 'examples',
                                       'tests', 'release']),
       install_requires=['redis==2.10.6',
-                        'retrying==1.3.3',
                         'kafka-python==1.4.2'],
       include_package_data=True,
       zip_safe=False)
