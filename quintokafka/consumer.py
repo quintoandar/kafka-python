@@ -3,26 +3,26 @@ import logging
 
 from retrying import retry
 from kafka.consumer.group import KafkaConsumer
-from quintoandar_kafka import IdempotenceClient
+from quintokafka.idempotence_client import RedisIdempotenceClient
 from functools import partial
 
 
-class KafkaDefaultConsumer():
+class KafkaSimpleConsumer():
     def __init__(self, processor, **kwargs):
         self.log = logging.getLogger(__name__)
         self.processor = processor
-        if kwargs.get('deserializer') is None:
-            kwargs['deserializer'] = self.default_deserializer
+        if kwargs.get('value_deserializer') is None:
+            kwargs['value_deserializer'] = self.__default_deserializer
         if kwargs.get('auto_offset_reset') is None:
             kwargs['auto_offset_reset'] = 'latest'
-        self.consumer = self.connect(kwargs)
+        self.consumer = self.__connect(kwargs)
         self.consumer.subscribe(kwargs['topic'])
 
     @retry(stop_max_attempt_number=10, wait_fixed=3000)
-    def connect(self, kwargs):
+    def __connect(self, kwargs):
         return KafkaConsumer(kwargs)
 
-    def default_deserializer(self, m):
+    def __default_deserializer(self, m):
         try:
             return json.loads(m.decode('utf8'))
         except Exception as ex:
@@ -37,16 +37,16 @@ class KafkaDefaultConsumer():
             self.processor(message)
 
 
-class KafkaIdempotentConsumer(KafkaDefaultConsumer):
+class KafkaIdempotentConsumer(KafkaSimpleConsumer):
 
     def __init__(self, redis_host, redis_port, processor,
-                 key_extractor, **kwargs):
+                 idempotent_key, **kwargs):
         processor = partial(self.idempotent_processor, processor)
         super().__init__(processor, **kwargs)
         self.topic = kwargs['topic']
-        self.idempotence_client = IdempotenceClient(
+        self.idempotence_client = RedisIdempotenceClient(
             redis_host, redis_port, kwargs['group_id'],
-            key_extractor=key_extractor)
+            idempotent_key=idempotent_key)
 
     def idempotent_processor(self, processor, message):
         if not self.idempotence_client.is_unique(self.topic, message):

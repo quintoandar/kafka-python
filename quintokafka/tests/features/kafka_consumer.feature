@@ -6,12 +6,12 @@ Feature: KafkaConsumer
         And The idempotence_client created with the correct params
 
     Scenario: Default serializer exception
-        Given A KafkaIdempotentConsumer is instanciated
+        Given A KafkaSimpleConsumer
         When An invalid value is deserialized
         Then The deserialized value should be an empty object
 
     Scenario: Default serializer
-        Given A KafkaIdempotentConsumer is instanciated
+        Given A KafkaSimpleConsumer
         When A valid value is deserialized
         Then The deserialized value should be the expected object
 
