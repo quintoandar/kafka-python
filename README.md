@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/quintoandar/python-kafka.svg?branch=master)](https://travis-ci.org/quintoandar/python-kafka)
 
-# Python Kafka
+# QuintoAndar Kafka Python Library
 
 QuintoAndar's kafka-python lib wrapper with additional functionalities.
 
@@ -19,4 +19,4 @@ A simple wrapper for kafka-python lib that uses redis to check duplicate events.
 | idempotent_key    | Function which extract an unique identifier from the event |
 
 
-See [examples](/quintokafka/examples)
+See [examples](/examples)

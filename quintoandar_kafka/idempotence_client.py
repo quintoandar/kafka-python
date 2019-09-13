@@ -11,8 +11,9 @@ class IdempotenceClient:
 
 
 class RedisIdempotenceClient(IdempotenceClient):
-    def __init__(self, host, port, group_id, db=0,
-                 expire=14 * 24 * 3600, idempotent_key=None):
+    def __init__(
+        self, host, port, group_id, db=0, expire=14 * 24 * 3600, idempotent_key=None
+    ):
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
         self.group_id = group_id
         self.expire = expire  # default 2 weeks
@@ -42,5 +43,4 @@ class RedisIdempotenceClient(IdempotenceClient):
         key = message
         if self.idempotent_key:
             key = self.idempotent_key(message)
-        return '{}-{}-{}'.format(topic, self.group_id,
-                                 hash(str(key)))
+        return "{}-{}-{}".format(topic, self.group_id, hash(str(key)))
