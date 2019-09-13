@@ -8,9 +8,9 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(dir_path)
 
 MINIMUM_COVERAGE = 70
-START_GREEN = '\x1b[1;36;40m'
-START_RED = '\x1b[6;30;41m'
-END_COLOR = '\x1b[0m'
+START_GREEN = "\x1b[1;36;40m"
+START_RED = "\x1b[6;30;41m"
+END_COLOR = "\x1b[0m"
 
 cov = coverage.Coverage()
 cov.start()
@@ -20,7 +20,7 @@ print("-----------------------------------------")
 print("------------------ TESTS ----------------")
 print("-----------------------------------------")
 print()
-result = behave_main("quintokafka/tests")
+result = behave_main("quintoandar_kafka/tests")
 cov.stop()
 print()
 print("-----------------------------------------")
@@ -32,10 +32,11 @@ total_cover = cov.report()
 print()
 if total_cover < MINIMUM_COVERAGE:
     print("-----------------------------------------")
-    print('---Code coverage requirements %sNOT%s met!---' % (START_RED,
-                                                             END_COLOR))
-    print("----------Minimum coverage %s%d%%%s!----------" %
-          (START_GREEN, MINIMUM_COVERAGE, END_COLOR))
+    print("---Code coverage requirements %sNOT%s met!---" % (START_RED, END_COLOR))
+    print(
+        "----------Minimum coverage %s%d%%%s!----------"
+        % (START_GREEN, MINIMUM_COVERAGE, END_COLOR)
+    )
     print("-----------------------------------------")
     print()
 print("-----------------------------------------")

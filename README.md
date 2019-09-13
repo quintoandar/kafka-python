@@ -19,4 +19,4 @@ A simple wrapper for kafka-python lib that uses redis to check duplicate events.
 | idempotent_key    | a function que extracts a unique identifier from the event |
 
 
-See [examples](/quintokafka/examples)
+See [examples](/examples)
