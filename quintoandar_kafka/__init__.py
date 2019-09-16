@@ -1,3 +1,3 @@
-from quintoandar_kafka.consumer import KafkaSimpleConsumer, KafkaIdempotentConsumer
+from quintoandar_kafka.consumer import KafkaSimpleConsumer, KafkaIdempotentConsumer, KafkaConsumer
 
-__all__ = ["KafkaSimpleConsumer", "KafkaIdempotentConsumer"]
+__all__ = ["KafkaSimpleConsumer", "KafkaIdempotentConsumer", "KafkaConsumer"]
