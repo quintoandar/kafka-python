@@ -1,70 +1,53 @@
 from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that, equal_to
-from quintoandar_kafka import KafkaIdempotentConsumer
-
-message = MagicMock()
-message.value = {"test1": "test2"}
-message.topic = "test3"
+from quintoandar_kafka import KafkaConsumer
 
 
-@given("A KafkaIdempotentConsumer is instanciated")
-def step_impl_given_idempotent_kafka_consumer(context):
-    context.idempotent_key = MagicMock()
-    context.redis_host = "redis_host"
-    context.redis_port = "redis_port"
-    context.group_id = "test1"
-    context.bootstrap_servers = "test2"
-    context.topic = "test3"
-    context.consumer = KafkaIdempotentConsumer.__new__(KafkaIdempotentConsumer)
-    context.consumer.idempotence_client = MagicMock()
-    context.consumer.config = {"consumer_timeout_ms": 0}
-    context.consumer._iterator = MagicMock()
+@given("KafkaConsumer is instantiated")
+def step_impl_given_instance(context):
+    context.kafka_consumer = KafkaConsumer.__new__(KafkaConsumer)
+    context.kafka_consumer.log = MagicMock()
+    message0 = MagicMock()
+    message0.value = {"eventName": "test_event", "payload": "test_payload"}
+    message1 = MagicMock()
+    message1.value = {"eventName": "test_event1", "payload": "test_payload1"}
+    message2 = MagicMock()
+    message2.value = None
+    context.kafka_consumer.consumer = [message0, message1, message2]
 
 
-@when("The consumer receives an unique message")
-def step_impl_when_message(context):
-    context.consumer._iterator.__next__ = MagicMock(return_value=message)
-    context.consumer.idempotence_client.is_unique = MagicMock(return_value=True)
-    for m in context.consumer:
-        print(m)
-        context.msg = m
-        break
-
-
-@when("The consumer receives an repeated message")
-def step_impl_when_repeated_message(context):
-    repeated_msg = MagicMock()
-    repeated_msg.topic = "repeated"
-    repeated_msg.value = "repeated"
-    context.consumer._iterator.__next__ = MagicMock()
-    context.consumer._iterator.__next__.side_effect = [repeated_msg, message]
-    context.consumer.idempotence_client.is_unique = MagicMock()
-    context.consumer.idempotence_client.is_unique.side_effect = [False, True]
-    for m in context.consumer:
-        context.msg = m
-        break
-
-
-@then("The message should be returned")
-def step_impl_then_return_msg(context):
-    assert_that(context.msg, equal_to(message))
-
-
-@then("The repeated message should be skipped")
-def step_impl_then_skip_msg(context):
-    assert_that(context.msg, equal_to(message))
-
-
-@then("The idempotence_client should be called with the correct params")
-def step_impl_then_call_is_unique(context):
-    context.consumer.idempotence_client.mark_consumed_message.assert_called_once_with(
-        message.topic, message
+@when("I read from KafkaConsumer")
+def step_impl_when_read(context):
+    context.message_processor1 = MagicMock()
+    context.message_processor2 = MagicMock()
+    context.kafka_consumer.read(
+        [
+            ("test_event", context.message_processor1),
+            ("test_event", context.message_processor2),
+        ]
     )
 
 
-@then("The idempotence_client should mark the message as consumed")
-def step_impl_then_mark_consumed(context):
-    context.consumer.idempotence_client.mark_consumed_message.assert_called_once_with(
-        message.topic, message
+@then("the message processor should be called with the correct parameters")
+def step_impl_then_verify(context):
+    context.message_processor1.assert_called_once()
+    context.message_processor1.assert_called_with(
+        {"payload": "test_payload", "eventName": "test_event"}
     )
+    context.message_processor2.assert_called_once()
+    context.message_processor2.assert_called_with(
+        {"payload": "test_payload", "eventName": "test_event"}
+    )
+
+
+@when("I deserialize a dictionary")
+def step_impl_when_deserialize(context):
+    context.deserialized = context.kafka_consumer._deserializer(
+        bytes('{"test": "test"}', "utf8")
+    )
+
+
+@then("I expect the correct json")
+def step_impl_then_verify_deserialize(context):
+    assert_that(context.deserialized, equal_to({"test": "test"}))

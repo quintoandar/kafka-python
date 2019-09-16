@@ -1,13 +1,11 @@
 Feature: KafkaConsumer
 
-    Scenario: KafkaIdempotentConsumer unique message
-        Given A KafkaIdempotentConsumer is instanciated
-        When The consumer receives an unique message
-        Then The message should be returned
-        And The idempotence_client should be called with the correct params
-        And The idempotence_client should mark the message as consumed
-    
-    Scenario: KafkaIdempotentConsumer repeated message
-        Given A KafkaIdempotentConsumer is instanciated
-        When The consumer receives an repeated message
-        Then The repeated message should be skipped
+    Scenario: Read messages from kafka
+        Given KafkaConsumer is instantiated
+        When I read from KafkaConsumer
+        Then the message processor should be called with the correct parameters
+
+    Scenario: Test json deserializer
+        Given KafkaConsumer is instantiated
+        When I deserialize a dictionary
+        Then I expect the correct json
