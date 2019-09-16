@@ -1,4 +1,4 @@
-Feature: KafkaConsumer
+Feature: KafkaIdempotentConsumer
 
     Scenario: KafkaIdempotentConsumer unique message
         Given A KafkaIdempotentConsumer is instanciated
