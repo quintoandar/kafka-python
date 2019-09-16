@@ -28,8 +28,7 @@ See [examples](/examples)
 At the bare minimum you'll need the following for your development
 environment:
 
-1. [Python 3.6](http://www.python.org/)
-
+1. [Python 3.6.8](http://www.python.org/)
 
 It is strongly recommended to also install and use [pyenv](https://github.com/pyenv/pyenv):
 
@@ -60,5 +59,5 @@ make environment
 You can just the make recipe:
 
 ```bash
-  make install
+make install
 ```
