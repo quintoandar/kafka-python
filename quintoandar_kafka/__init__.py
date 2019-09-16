@@ -5,3 +5,5 @@ from quintoandar_kafka.consumer import (
 )
 
 __all__ = ["KafkaSimpleConsumer", "KafkaIdempotentConsumer", "KafkaConsumer"]
+
+name = "quintoandar_kafka"
