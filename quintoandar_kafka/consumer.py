@@ -13,6 +13,7 @@ class KafkaSimpleConsumer(KafkaConsumer):
             kwargs["value_deserializer"] = lambda m: m.decode("utf8")
         if kwargs.get("auto_offset_reset") is None:
             kwargs["auto_offset_reset"] = "latest"
+        kwargs['legacy_iterator'] = False
         super().__init__(*topics, **kwargs)
 
 
