@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/quintoandar/python-kafka.svg?branch=master)](https://travis-ci.org/quintoandar/python-kafka)
+[![Build Status](https://travis-ci.org/quintoandar/kafka-python.svg?branch=master)](https://travis-ci.org/github/quintoandar/kafka-python)
 
 # QuintoAndar Kafka Python Library
 
@@ -14,7 +14,7 @@ A simple wrapper for kafka-python lib that uses redis to check duplicate events.
 | ----------------- | -------------------------------------------- |
 | group_id          | The consumer group id                        |
 | bootstrap_servers | The bootstrap servers                        |
-| redis_host        | The topic to consume from                    |
+| redis_host        | The redis host                               |
 | redis_port        | The function that processes the event        |
 | idempotent_key    | Function which extract an unique identifier from the event |
 

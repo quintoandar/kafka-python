@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 from behave import given, when, then  # pylint: disable=E0611
 from hamcrest import assert_that, equal_to
-from quintoandar_kafka import KafkaIdempotentConsumer
+from quintoandar_kafka import KafkaIdempotentConsumer, KafkaSimpleConsumer
 
 message = MagicMock()
 message.value = {"test1": "test2"}
@@ -18,13 +18,12 @@ def step_impl_given_idempotent_kafka_consumer(context):
     context.topic = "test3"
     context.consumer = KafkaIdempotentConsumer.__new__(KafkaIdempotentConsumer)
     context.consumer.idempotence_client = MagicMock()
-    context.consumer.config = {"consumer_timeout_ms": 0}
-    context.consumer._iterator = MagicMock()
-
+    context.consumer.config = {"consumer_timeout_ms": 0, "legacy_iterator": False}
+    context.consumer._closed = False
 
 @when("The consumer receives an unique message")
 def step_impl_when_message(context):
-    context.consumer._iterator.__next__ = MagicMock(return_value=message)
+    KafkaSimpleConsumer.__next__ = MagicMock(return_value=message)
     context.consumer.idempotence_client.is_unique = MagicMock(return_value=True)
     for m in context.consumer:
         print(m)
@@ -37,10 +36,8 @@ def step_impl_when_repeated_message(context):
     repeated_msg = MagicMock()
     repeated_msg.topic = "repeated"
     repeated_msg.value = "repeated"
-    context.consumer._iterator.__next__ = MagicMock()
-    context.consumer._iterator.__next__.side_effect = [repeated_msg, message]
-    context.consumer.idempotence_client.is_unique = MagicMock()
-    context.consumer.idempotence_client.is_unique.side_effect = [False, True]
+    KafkaSimpleConsumer.__next__ = MagicMock(side_effect=[repeated_msg, message])
+    context.consumer.idempotence_client.is_unique = MagicMock(side_effect = [False, True])
     for m in context.consumer:
         context.msg = m
         break

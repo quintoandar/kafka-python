@@ -14,7 +14,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="quintoandar_kafka",
-    version="2.0.0",
+    version="2.0.1",
     author="QuintoAndar",
     author_email="rodrigo.oliveira@quintoandar.com.br",
     description="Checks messages to avoid reprocessing events.",
