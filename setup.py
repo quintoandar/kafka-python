@@ -19,7 +19,7 @@ setup(
     url="https://github.com/quintoandar/kafka-python",
     packages=find_packages(exclude=["ez_setup", "examples", "tests", "release"]),
     install_requires=[
-        "redis==2.10.6",
+        "redis==4.5.3",
         "retrying==1.3.3",
         "kafka-python==2.0.1",
     ],
